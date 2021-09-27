@@ -1,23 +1,25 @@
 extern crate nalgebra as na;
 use serde::{Deserialize, Serialize};
 
-use na::{DMatrix};
+use na::DMatrix;
 
 //use nalgebra_sparse::{coo::CooMatrix, csr::CsrMatrix, csc::CscMatrix};
 
 use crate::number::{MachineFloat, MachineInt, Number};
 
-use std::{collections::HashMap, ops::Index};
+use std::{collections::HashMap};
 
 type IndexType = usize;
+
 type IndexVec = Vec<IndexType>;
 
-#[derive(Serialize, Deserialize, Debug, Hash, PartialEq, Eq, Clone, Copy)]
+
+#[derive(Serialize, Deserialize, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ArrayIndex {
     U0,
     U1 { index: IndexType },
     U2 { row: IndexType, col: IndexType },
-    //Uv { indices: IndexVec },
+    Uv { indices: IndexVec },
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -71,7 +73,6 @@ pub enum NumericArray {
 }
 
 impl NumericArray {
-
     pub fn get(&self, index: ArrayIndex) -> Number {
         match (self, index) {
             (NumericArray::NaMatrix(matrix), ArrayIndex::U2 { row, col }) => match matrix {
@@ -108,27 +109,27 @@ impl NumericArray {
             (
                 NumericArray::NumberHashMap {
                     size: _,
-                    default,
+                    default: _,
                     data,
                 },
                 index,
-            ) => data[&index] = value,
-            (NumericArray::Constant { size: _, value }, _index) => panic!("cant set const array"),
+            ) => {
+                data.insert(index, value);
+            }
+            (NumericArray::Constant { size: _, value: _ }, _index) => panic!("cant set const array"),
             _ => panic!("invalid index / backing paring"),
         }
     }
 
     pub fn shape(&self) -> ArrayIndex {
         match self {
-            NumericArray::NumberVecArray { size, data: _ } => *size,
-            // NumericArray::MachineIntVecArray { size, data } => size,
-            // NumericArray::MachineFloatVecArray { size, data } => size,
-            NumericArray::Constant { size, value: _ } => *size,
+            NumericArray::NumberVecArray { size, data: _ } => size.clone(),
+            NumericArray::Constant { size, value: _ } => size.clone(),
             NumericArray::NumberHashMap {
                 size,
                 default: _,
                 data: _,
-            } => *size,
+            } => size.clone(),
             NumericArray::NaMatrix(matrix) => matrix.shape(),
         }
     }
@@ -153,7 +154,7 @@ impl From<ArrayIndex> for IndexVec {
         match val {
             ArrayIndex::U1 { index } => vec![index],
             ArrayIndex::U2 { row, col } => vec![row, col],
-            //ArrayIndex::Uv { indices } => indices,
+            ArrayIndex::Uv { indices } => indices,
             ArrayIndex::U0 => vec![],
         }
     }
@@ -168,20 +169,19 @@ impl From<IndexVec> for ArrayIndex {
                 row: val[0],
                 col: val[1],
             },
-            //_ => ArrayIndex::Uv { indices: self },
-            _ => panic!("invalid index length"),
+            _ => ArrayIndex::Uv { indices: val },
+            //_ => panic!("invalid index length"),
         }
     }
 }
 
 impl ArrayIndex {
-
     pub fn len(self: &ArrayIndex) -> IndexType {
         match self {
             ArrayIndex::U0 => 0,
             ArrayIndex::U1 { index: _ } => 1,
             ArrayIndex::U2 { row: _, col: _ } => 2,
-            //ArrayIndex::Uv { indices } => indices.len(),
+            ArrayIndex::Uv { indices } => indices.len(),
         }
     }
     // fn normalized(self: &ArrayIndex) -> ArrayIndex{
@@ -259,43 +259,15 @@ impl ArrayIndex {
     }
 }
 
-impl Index<ArrayIndex> for NumericArray {
-    type Output = Number;
-
-    fn index(&self, index: ArrayIndex) -> &Self::Output {
-        match (self, index) {
-            // (NumericArray::NaMatrix(matrix), ArrayIndex::U2 { row, col }) => match matrix {
-            //     NaMatrix::MachineFloat(data) => &data[(row, col)].into(),
-            //     NaMatrix::MachineInt(data) => &data[(row, col)].into(),
-            // },
-            (NumericArray::NumberVecArray { size, data }, index) => {
-                let index = size.linear_index(&index).expect("invalid index");
-                &data[index]
-            }
-            (
-                NumericArray::NumberHashMap {
-                    size: _,
-                    default,
-                    data,
-                },
-                index,
-            ) => data.get(&index).unwrap_or(default),
-            (NumericArray::Constant { size: _, value }, _index) => &value,
-            _ => panic!("invalid index / backing paring"),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::{Number, NumericArray, numeric_array::{ArrayIndex}};
+    use crate::{numeric_array::ArrayIndex, Number, NumericArray};
 
     #[test]
     fn indices() {
-        let size = ArrayIndex::U2{ row : 10, col: 10};
+        let size = ArrayIndex::U2 { row: 10, col: 10 };
         let value = Number::MachineInt(2);
-        let _numeric_array : NumericArray = NumericArray::Constant { 
-            size, value
-        };
+        let numeric_array: NumericArray = NumericArray::Constant { size, value };
+        assert_eq!(numeric_array.get(vec![1, 1].into()), value);
     }
 }
