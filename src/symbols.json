@@ -1,0 +1,36 @@
+[
+  {
+    "operator": "/.",
+    "name": "Replace"
+  },
+  {
+    "operator": "//.",
+    "name": "ReplaceAll"
+  },
+  {
+    "operator": "@@",
+    "name": "Apply"
+  },
+  {
+    "operator": "@@@",
+    "name": "Apply1"
+  },
+  {
+    "operator": "/@",
+    "name": "Map"
+  },
+  {
+    "operator": "//@",
+    "name": "MapAll"
+  },
+  {
+    "operator": "@*",
+    "name": "LeftComposition",
+    "attributes": ["Flat", "OneIdentity"]
+  },
+  {
+    "operator": "/*",
+    "name": "RightComposition",
+    "attributes": ["Flat", "OneIdentity"]
+  },
+]

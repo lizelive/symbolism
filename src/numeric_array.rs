@@ -259,15 +259,3 @@ impl ArrayIndex {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::{numeric_array::ArrayIndex, Number, NumericArray};
-
-    #[test]
-    fn indices() {
-        let size = ArrayIndex::U2 { row: 10, col: 10 };
-        let value = Number::MachineInt(2);
-        let numeric_array: NumericArray = NumericArray::Constant { size, value };
-        assert_eq!(numeric_array.get(vec![1, 1].into()), value);
-    }
-}

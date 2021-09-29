@@ -1,0 +1,232 @@
+use std::{borrow::Borrow, collections::HashMap, sync::Arc};
+
+use serde::{Deserialize, Serialize};
+
+use crate::{expression::BasicExpression, pattern::Form, Expression};
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum BuiltinSymbol {
+    //symbol
+    Symbol,
+
+    //primitive
+    Integer,
+    Real,
+    String,
+
+    //builtin types
+    //List,
+    //Assocation,
+
+    //Pattern
+    Blank,
+    BlankSequence,
+    BlankNullSequence,
+
+    Except,
+    Longest,
+    Shortest,
+    OptionsPattern,
+    PatternSequence,
+    Verbatim,
+    HoldPattern,
+    OrderlessPatternSequence,
+    KeyValuePattern,
+    PatternTest,
+
+    //operators
+    Piecewise,
+    MessageName,
+    Get,
+    Overscript,
+    Underscript,
+    Underoverscript,
+    Subscript,
+    Part,
+    Increment,
+    Decrement,
+    PreIncrement,
+    PreDecrement,
+    Composition,
+    RightComposition,
+    Application,
+    Map,
+    MapAll,
+    Apply,
+    Factorial,
+    Factorial2,
+    Conjugate,
+    Transpose,
+    ConjugateTranspose,
+    Derivative,
+    StringJoin,
+    Power,
+    Sqrt,
+    DifferentialD,
+    D,
+    Del,
+    DiscreteShift,
+    DiscreteRatio,
+    DifferenceDelta,
+    Square,
+    SmallCircle,
+    CircleDot,
+    NonCommutativeMultiply,
+    Cross,
+    Dot,
+    Minus,
+    PlusMinus,
+    MinusPlus,
+    Divide,
+    Backslash,
+    Diamond,
+    Wedge,
+    Vee,
+    CircleTimes,
+    CenterDot,
+    Times,
+    Star,
+    Product,
+    VerticalTilde,
+    Coproduct,
+    Cap,
+    Cup,
+    CirclePlus,
+    CircleMinus,
+    Integrate,
+    Sum,
+    Limit,
+    MaxLimit,
+    MinLimit,
+    Plus,
+    Intersection,
+    Union,
+    Span,
+    Equal,
+    Unequal,
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
+    VerticalBar,
+    NotVerticalBar,
+    DoubleVerticalBar,
+    NotDoubleVerticalBar,
+    SameQ,
+    UnsameQ,
+    Element,
+    NotElement,
+    Subset,
+    Superset,
+    ForAll,
+    Exists,
+    NotExists,
+    Not,
+    And,
+    Nand,
+    Xor,
+    Xnor,
+    Or,
+    Nor,
+    Equivalent,
+    Implies,
+    RightTee,
+    DoubleRightTee,
+    LeftTee,
+    DoubleLeftTee,
+    UpTee,
+    DownTee,
+    SuchThat,
+    Repeated,
+    RepeatedNull,
+    Alternatives,
+
+    Pattern,
+    Optional,
+    StringExpression,
+    Condition,
+    TwoWayRule,
+    Rule,
+    RuleDelayed,
+    ReplaceAll,
+    ReplaceRepeated,
+    AddTo,
+    SubtractFrom,
+    TimesBy,
+    DivideBy,
+    Function,
+    Colon,
+    ApplyTo,
+    VerticalSeparator,
+    Therefore,
+    Because,
+    Set,
+    SetDelayed,
+    UpSet,
+    UpSetDelayed,
+    TagSet,
+    TagSetDelayed,
+    Unset,
+    TagUnset,
+    Put,
+    PutAppend,
+    CompoundExpression,
+    FormBox,
+    Slot,
+    SlotSequence,
+    Out,
+
+    Definition,
+    FullDefinition,
+
+    // all other
+    Named(String),
+
+    Inequality,
+}
+
+
+impl BuiltinSymbol {
+    pub(crate) fn name(&self) -> String {
+        match self {
+            BuiltinSymbol::Named(name) => name.clone(),
+            BuiltinSymbol::Symbol => "Symbol".to_string(),
+            BuiltinSymbol::Integer => "Integer".to_string(),
+            BuiltinSymbol::Real => "Real".to_string(),
+            BuiltinSymbol::String => "String".to_string(),
+            BuiltinSymbol::Blank => "Blank".to_string(),
+            BuiltinSymbol::BlankSequence => "BlankSequence".to_string(),
+            BuiltinSymbol::BlankNullSequence => todo!(),
+            BuiltinSymbol::Alternatives => todo!(),
+            BuiltinSymbol::Repeated => todo!(),
+            BuiltinSymbol::RepeatedNull => todo!(),
+            BuiltinSymbol::Pattern => todo!(),
+            BuiltinSymbol::Except => todo!(),
+            BuiltinSymbol::Longest => todo!(),
+            BuiltinSymbol::Shortest => todo!(),
+            BuiltinSymbol::OptionsPattern => todo!(),
+            BuiltinSymbol::PatternSequence => todo!(),
+            BuiltinSymbol::Verbatim => todo!(),
+            BuiltinSymbol::HoldPattern => todo!(),
+            BuiltinSymbol::OrderlessPatternSequence => todo!(),
+            BuiltinSymbol::KeyValuePattern => todo!(),
+            BuiltinSymbol::Condition => todo!(),
+            BuiltinSymbol::PatternTest => todo!(),
+            BuiltinSymbol::Optional => todo!(),
+            _ => todo!(),
+        }
+    }
+
+    pub(crate) fn get(name: String) -> BuiltinSymbol {
+        Self::Named(name)
+    }
+}
+
+impl From<BuiltinSymbol> for Expression {
+    fn from(value: BuiltinSymbol) -> Self {
+        Self::Basic(BasicExpression::Symbol { value })
+    }
+}
+
+
+
