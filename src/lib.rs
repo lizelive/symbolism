@@ -1,30 +1,75 @@
-mod expression;
-mod pattern;
-mod attributes;
-mod symbol;
+
+extern crate enum_dispatch;
 
 mod context;
+mod number;
+mod bigreal;
+mod atomic;
+mod ast;
 
-pub use  crate::expression::Expression;
-pub use  crate::symbol::BuiltinSymbol;
+use context::*;
+
+macro_rules! symbol {
+    ($x:ident) => {{
+        const SYMBOL: Symbol = stringify!($x);
+        SYMBOL
+    }
+    };
+}
+
+macro_rules! expr {
+    ({$( $x:expr ),* }) => {{
+        list!($($x),+)
+    }};
+    ($head:ident) => {
+        symbol!(ident)
+    };
+    ($head:ident[$( $a:expr ),*]) => {{
+        let head:AnyExpression = symbol!($head).into();
+        ComplexExpression::new(
+            Box::new(head),
+            list!($($a),+).into(),
+        )
+    }};
+    ($( $x:expr );*) => {{
+        list!($($x),+)
+    }};
+    ($x:expr) => {{
+        list!($($x),+)
+    }};
+}
+
+macro_rules! list {
+    ($( $x:expr ),* ) => {
+        {
+            let list: List = vec![
+                $(
+                    $x.into(),
+                )*
+            ];
+            //let expr: AnyExpression = list.into();
+            list
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
-
-    use crate::{Expression, expression::BasicExpression};
+    use crate::*;
     #[test]
     fn repr_int() {
-        let expr: Expression = 10.into();
-        assert_eq!(expr.repr(), "10");
+        let ctx = Context::new();
+        let expr = expr!(help[1]);
+        expr.eval(&ctx);
+        let expr = AnyExpression::from(expr);
+        println!("{:?} == {}", expr, expr.repr())
     }
 
-    #[test]
-    fn repr_plus() {
-        let i10: Expression = 10.into();
-        let f1_23: Expression = 1.23.into();
+    // fn repr_plus() {
+    //     let i10: Expression = 10.into();
+    //     let f1_23: Expression = 1.23.into();
 
-        let expr= Expression::new("Plus", vec![i10, f1_23]);
-        assert_eq!(expr.repr(), "Plus[10, 1.23]");
-    }
+    //     let expr= Expression::new("Plus", vec![i10, f1_23]);
+    //     assert_eq!(expr.repr(), "Plus[10, 1.23]");
+    // }
 }

@@ -1,146 +1,134 @@
-use std::{
-    ops::{Add, Mul, Div, Sub},
-};
+use std::{cmp::Ordering, ops::{Add, Mul, Div, Sub}};
 
-pub type MachineFloat = f64;
-pub type MachineInt = i64;
-pub type MachineComplexFloat = Complex<MachineFloat>;
-pub type MachineComplexInt = Complex<MachineInt>;
+use num::{BigInt, BigRational, Num, Rational32, Rational64};
 
-use nalgebra::Complex;
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
-pub enum Number {
-    MachineFloat(MachineFloat),
-    MachineInt(MachineInt),
-    MachineComplexFloat(MachineComplexFloat),
-    MachineComplexInt(MachineComplexInt),
-}
-
-impl From<MachineFloat> for Number {
-    fn from(v: MachineFloat) -> Self {
-        Self::MachineFloat(v)
-    }
-}
-
-impl From<MachineInt> for Number {
-    fn from(val: MachineInt) -> Self {
-        Number::MachineInt(val)
-    }
-}
-
-impl Into<MachineFloat> for Number {
-    fn into(self) -> MachineFloat {
-        match self {
-            Number::MachineFloat(a) => a as MachineFloat,
-            Number::MachineInt(a) => a as MachineFloat,
-            Number::MachineComplexFloat(a) => a.re as MachineFloat,
-            Number::MachineComplexInt(a) => a.re as MachineFloat,
-        }
-    }
-}
-
-impl From<Number> for MachineInt {
-    fn from(val: Number) -> Self {
-        match val {
-            Number::MachineFloat(a) => a as MachineInt,
-            Number::MachineInt(a) => a as MachineInt,
-            Number::MachineComplexFloat(a) => a.re as MachineInt,
-            Number::MachineComplexInt(a) => a.re as MachineInt,
-        }
-    }
-}
-
-impl Into<MachineComplexInt> for Number {
-    fn into(self) -> MachineComplexInt {
-        match self {
-            Number::MachineFloat(a) => MachineComplexInt::new(a as MachineInt, 0 as MachineInt),
-            Number::MachineInt(a) => MachineComplexInt::new(a as MachineInt, 0 as MachineInt),
-            Number::MachineComplexFloat(a) => MachineComplexInt::new(a.re as MachineInt, a.im as MachineInt),
-            Number::MachineComplexInt(a) => MachineComplexInt::new(a.re as MachineInt, a.im as MachineInt),
-        }
-    }
-}
+use crate::context::Symbol;
 
 
-impl Into<MachineComplexFloat> for Number {
-    fn into(self) -> MachineComplexFloat {
-        match self {
-            Number::MachineFloat(a) => MachineComplexFloat::new(a as MachineFloat, 0 as MachineFloat),
-            Number::MachineInt(a) => MachineComplexFloat::new(a as MachineFloat, 0 as MachineFloat),
-            Number::MachineComplexFloat(a) => MachineComplexFloat::new(a.re as MachineFloat, a.im as MachineFloat),
-            Number::MachineComplexInt(a) => MachineComplexFloat::new(a.re as MachineFloat, a.im as MachineFloat),
-        }
-    }
-}
-
-impl Number {
-    fn re(&self) -> Number {
-        match self {
-            Number::MachineFloat(re) => Number::MachineFloat(*re),
-            Number::MachineInt(re) => Number::MachineInt(*re),
-            Number::MachineComplexFloat(c) => Number::MachineFloat(c.re),
-            Number::MachineComplexInt(c) => Number::MachineInt(c.re),
-
-        }
-    }
-
-    fn im(&self) -> Number {
-        match self {
-            Number::MachineComplexFloat(c) => Number::MachineFloat(c.im),
-            Number::MachineComplexInt(c) => Number::MachineInt(c.im),
-            Number::MachineFloat(_) => Number::MachineInt(0),
-            Number::MachineInt(_) => Number::MachineInt(0),
-        }
-    }
+enum Comparison {
     
-    fn is_complex(&self) -> bool {
-        match self{
-            Number::MachineFloat(_) => false,
-            Number::MachineInt(_) => false,
-            Number::MachineComplexFloat(_) => true,
-            Number::MachineComplexInt(_) => true,
-        }
-    }
-    
-    fn is_integer(&self) -> bool{
-        match self{
-            Number::MachineFloat(_) => false,
-            Number::MachineInt(_) => true,
-            Number::MachineComplexFloat(_) => false,
-            Number::MachineComplexInt(_) => true,
-        }
-    }
 }
 
-impl Sub<Number> for Number {
-    type Output = Number;
+fn add<TL, TR>(lhs:&TL, rhs: &TR) -> AnyNumber where TR: Number, TL : Number{
+    lhs.add(rhs)
+}
 
-    fn sub(self, rhs: Number) -> Self::Output {
-        let is_complex = self.is_complex() || rhs.is_complex();
-        let is_int = self.is_integer() && rhs.is_integer();
-        match (is_complex, is_int){
-            (true, true) => {
-                let a : MachineComplexInt = self.into();
-                let b : MachineComplexInt = rhs.into(); 
-                Number::MachineComplexInt(a - b)
-            },
-            (true, false) => {
-                let a : MachineComplexFloat = self.into();
-                let b : MachineComplexFloat = rhs.into(); 
-                Number::MachineComplexFloat(a - b)
-            },
-            (false, true) => {
-                let a : MachineInt = self.into();
-                let b : MachineInt = rhs.into(); 
-                Number::MachineInt(a - b)
-            },
-            (false, false) => {
-                let a : MachineFloat = self.into();
-                let b : MachineFloat = rhs.into(); 
-                Number::MachineFloat(a - b)
-            },
-        }
-    }
+trait Number {
+    fn add(&self, rhs: &AnyNumber) -> AnyNumber;
+    fn sub(&self, rhs: &AnyNumber) -> AnyNumber;
+    fn mul(&self, rhs: &AnyNumber) -> AnyNumber;
+    fn div(&self, rhs: &AnyNumber) -> AnyNumber;
+
+    fn neg(&self) -> AnyNumber;
+
+    fn abs(&self) -> AnyNumber;
+
+    fn power(&self, rhs: &AnyNumber) -> AnyNumber;
+    fn log(&self, base: &AnyNumber) -> AnyNumber;
+
+    fn compare(&self, rhs: &AnyNumber) -> Option<Ordering>;
+
+    fn real_q(&self) -> bool;
+    fn exact_number_q(&self) -> bool;
+    fn integer_q(&self) -> bool;
+    
+    fn head(&self) -> Symbol;
+    fn round(&self, to: &AnyNumber, kind: Round) -> AnyNumber;
+    fn numerical(&self, precision: Option<f64>) -> AnyNumber;
+    fn rationalize(&self, dx: Option<f64>) -> AnyNumber;
+    
+    fn machine_real_number(&self) -> f64;
+    
+    fn inexact_number_q(&self) -> bool;
+    fn machine_number_q(&self) -> bool;
+    fn precision(&self) -> f64;
+    fn real_exponent(&self) -> AnyNumber;
+    //fn integer_exponent(&self) -> AnyNumber;
+    //fn mantissa_exponent(&self) -> Option<(Real, Integer)>;
+    //fn numerator_denominator(&self, rhs: AnyNumber) -> AnyNumber;
+}
+
+
+
+
+type BigReal = f64;
+
+type ComplexBigRational = num::Complex<BigRational>;
+type Complex32 = num::Complex<f32>; 
+type Complex64 = num::Complex<f64>; 
+type ComplexBigReal = num::Complex<BigReal>;
+
+
+pub enum Round {
+    NearestTiesToEven,
+    TowardPositive,
+    TowardNegative,
+    TowardZero,
+    TowardsInfinity,
+    NearestTiesToAway,
+}
+
+pub enum AnyInteger {
+    Integer8(i8),
+    UnsignedInteger8(u8),
+    Integer16(i16),
+    UnsignedInteger16(u16),
+    Integer32(i32),
+    UnsignedInteger32(u32),
+    Integer64(i64),
+    UnsignedInteger64(u64),
+    Integer128(i128),
+    UnsignedInteger128(u128),
+    BigInt(BigInt),
+}
+
+pub enum AnyReal {
+    Real32(f32),
+    Real64(f64),
+    BigReal(BigReal),
+    Overflow,
+    Underflow,
+}
+
+pub enum AnyRational {
+    BigRational(BigRational),
+    Rational32(Rational32),
+    Rational64(Rational64),
+}
+
+pub enum Complex {
+    Real32(Complex32),
+    Real64(Complex64),
+    BigReal(ComplexBigReal),
+    BigRational(ComplexBigRational),
+}
+
+pub enum DirectedInfinity {
+    Real(AnyReal),
+    Integer(AnyInteger),
+    Complex,
+}
+
+pub enum AnyNumber {
+    Real(AnyReal),
+    Rational(AnyRational),
+    Complex(Complex),
+    DirectedInfinity(DirectedInfinity),
+
+    Indeterminate,
+}
+
+pub enum AnyPrimitive {
+    Symbol,
+    Boolean(bool),
+    Number(AnyNumber),
+}
+
+pub enum AnyExpression{
+    Primitive(AnyPrimitive),
+    NumericArray,
+    List,
+    Assocation,
+    External,
+    ComplexExpression,
 }

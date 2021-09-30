@@ -14,6 +14,24 @@ type IndexType = usize;
 type IndexVec = Vec<IndexType>;
 
 
+enum MachineNumber {
+    Integer8(i8),
+    UnsignedInteger8(u8),
+    Integer16(i16),
+    UnsignedInteger16(u16),
+    Integer32(i32),
+    UnsignedInteger32(u32),
+    Integer64(i64),
+    UnsignedInteger64(u64),
+    Real32(f32),
+    Real64(f64),
+    ComplexReal32(Complex<f32>),
+    ComplexReal64(Complex<f64>),
+}
+
+
+
+
 #[derive(Serialize, Deserialize, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ArrayIndex {
     U0,

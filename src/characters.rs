@@ -1,0 +1,17 @@
+enum Kind {
+    WhiteSp,
+    Letter,
+    Alias,
+    NonBreakingBeforeLetter,
+    Prefix,
+    Infix,
+    LargeOp,
+    Prefix,
+    CompoundPrefix,
+    InfixOpen,
+    Close,
+    Open,
+    Postfix,
+    Auto,
+    NonBreakingAfterLetter,
+}
