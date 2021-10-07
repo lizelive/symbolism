@@ -6,6 +6,12 @@ mod number;
 mod bigreal;
 mod atomic;
 mod ast;
+mod field;
+mod number_theory;
+mod curry;
+mod nest;
+mod list;
+mod number;
 
 use context::*;
 

@@ -8,6 +8,21 @@ use serde::{Deserialize, Serialize};
 
 use crate::{pattern::Form, symbol::BuiltinSymbol};
 
+pub enum AnyPrimitive {
+    Symbol,
+    Boolean(bool),
+    Number(AnyNumber),
+}
+
+pub enum AnyExpression{
+    Primitive(AnyPrimitive),
+    NumericArray,
+    List,
+    Assocation,
+    External,
+    ComplexExpression,
+}
+
 // #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 // pub struct Definition {
 //     symbol: Symbol,
